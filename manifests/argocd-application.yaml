@@ -21,9 +21,9 @@ spec:
     syncOptions:
     - CreateNamespace=true
     # Following may be commented to demonstrate the out-of-sync scenario. Uncommenting these will enable self-healing and pruning for the application.
-    # automated:
-    #   selfHeal: true
-    #   prune: true
+    automated:
+      selfHeal: true
+      prune: true
 
 ---
 
