@@ -1,0 +1,66 @@
+# There are three ArgoCD Applications defined in this manifest. The first one is for the sample to-do app, the second one is for the guestbook demo 
+# and the third one is intentionally set up to fail by referencing a non-existent revision in the Git repository. This will allow us to demonstrate the failure scenario in ArgoCD.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: todoapp-argo-application
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://gitlab.com/bhadra05-group/sample-to-do-app.git
+    targetRevision: HEAD
+    path: dev
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: todoapp
+
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    # Following may be commented to demonstrate the out-of-sync scenario. Uncommenting these will enable self-healing and pruning for the application.
+    # automated:
+    #   selfHeal: true
+    #   prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook-demo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: todo-app-fail
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/bhadra05-group/sample-to-do-app
+    targetRevision: fake
+    path: .
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample

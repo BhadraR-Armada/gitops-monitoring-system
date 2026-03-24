@@ -1,0 +1,40 @@
+prometheus:
+  prometheusSpec:
+    enableAdminAPI: true
+
+grafana:
+  sidecar:
+    dashboards:
+      enabled: true
+      # This must match your ConfigMap label
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ["alertname", "namespace"]
+      group_wait: 30s
+      group_interval: 1m
+      repeat_interval: 10m
+      receiver: "null"
+      routes:
+        # - match:
+        #     severity: critical
+        #   receiver: "teams"
+        #   continue: true
+        # - match:
+        #     severity: warning
+        #   receiver: "teams"
+        - matchers:
+          - alertname =~ "Application.*"
+          receiver: "teams"
+    receivers:
+      - name: "null"
+      - name: "teams"
+        webhook_configs:
+          - url: "http://prometheus-msteams.monitoring.svc.cluster.local:2000/alertmanager"
+            send_resolved: true

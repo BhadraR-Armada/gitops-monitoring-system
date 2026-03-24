@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: argocd-status-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+  - name: argocd.rules 
+    rules:
+    # 1. Alert for Health (Red boxes on your dashboard)
+    - alert: ApplicationDegraded
+      expr: argocd_app_info{health_status="Degraded"} == 1
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "ArgoCD App {{ $labels.name }} is Degraded"
+        description: "App {{ $labels.name }} in namespace {{ $labels.dest_namespace }} has failed health checks for more than 2 minutes."
+
+    # 2. Alert for Sync (Orange boxes on your dashboard)
+    - alert: ApplicationOutOfSync
+      expr: argocd_app_info{sync_status="OutOfSync"} == 1
+      for: 5m 
+      labels:
+        severity: warning
+      annotations:
+        summary: "ArgoCD App {{ $labels.name }} is Out of Sync"
+        description: "App {{ $labels.name }} configuration has drifted from Git."
+
+    # 3. Alert for Unknown (Gray boxes on your dashboard)
+    - alert: ApplicationStatusUnknown
+      expr: argocd_app_info{sync_status="Unknown"} == 1 or argocd_app_info{health_status="Unknown"} == 1
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "ArgoCD App {{ $labels.name }} status is Unknown"
+        description: "ArgoCD cannot determine the status of {{ $labels.name }}. Check argocd-repo-server logs."

@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-metrics-servicemonitor
+  namespace: argocd
+  labels:
+    release: monitoring  # This must match kube-prometheus-stack's selector
+spec:
+  selector:
+    matchLabels:
+      # This matches the label in 'k describe svc' output
+      app.kubernetes.io/name: argocd-metrics
+  endpoints:
+  - port: metrics        # This matches the Port Name 'metrics' from svc
+    interval: 30s
+    path: /metrics
+  namespaceSelector:
+    matchNames:
+    - argocd
