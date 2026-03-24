@@ -143,6 +143,43 @@ Then open in your browser:
 
 ---
 
+## Testing the Alerting System
+
+To verify the full alerting pipeline is working, you can deliberately break and fix the sample todo application and observe alerts firing in both Alertmanager and your Teams channel.
+
+### Breaking the Application
+
+Apply a memory limit that is too low for the application to run, causing it to crash loop:
+```bash
+kubectl patch deployment python-app-todo -n todoapp --type='json' \
+  -p='[{"op": "add", "path": "/spec/template/spec/containers/0/resources", "value": {"limits": {"memory": "1Mi"}}}]'
+```
+
+After a few minutes you should see:
+- The pod entering `CrashLoopBackOff` state in ArgoCD
+- `ApplicationDegraded` and `ApplicationOutOfSync` alerts firing in Alertmanager at `http://localhost:9093`
+- Alert notifications appearing in your Microsoft Teams channel
+
+You can watch the pod status with:
+```bash
+kubectl get pods -n todoapp -w
+```
+
+### Fixing the Application
+
+Remove the memory limit to restore the application to a healthy state:
+```bash
+kubectl patch deployment python-app-todo -n todoapp --type='json' \
+  -p='[{"op": "remove", "path": "/spec/template/spec/containers/0/resources"}]'
+```
+
+After a few minutes you should see:
+- The pod returning to `Running` state
+- Alerts resolving in Alertmanager
+- A resolved notification appearing in your Teams channel (if `send_resolved: true` is set)
+
+---
+
 ## Customisation
 
 ### Changing the Teams Webhook URL
