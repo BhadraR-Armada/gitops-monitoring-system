@@ -149,6 +149,7 @@ To verify the full alerting pipeline is working, you can deliberately break and 
 
 ### Breaking the Application
 
+Ensure that auto-healing and pruning is not enabled.
 Apply a memory limit that is too low for the application to run, causing it to crash loop:
 ```bash
 kubectl patch deployment python-app-todo -n todoapp --type='json' \
